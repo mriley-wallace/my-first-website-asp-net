@@ -1,0 +1,113 @@
+﻿@using WebsiteCreation.Models
+@using WebsiteCreation.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject JsonFileGTController GameService
+
+<div class="card-columns">
+    @foreach (var game in GameService.GetGames())
+    {
+<div class="card" @onclick="(e => SelectGame(game?.Id ?? string.Empty))" data-toggle="modal" data-target="#productModal">
+    <div class="card-img" style="background-image: url('@game.Image');">
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">@game.Title</h5>
+    </div>
+    <div class="card-footer">
+        <small class="text-muted">
+            <button @onclick="(e => SelectGame(game?.Id ?? string.Empty))"
+                    data-toggle="modal" data-target="#productModal" class="btn btn-primary">
+                More Info
+            </button>
+        </small>
+    </div>
+</div>}
+</div>
+
+
+<div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        @if (selectedGame != null)
+        {
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title" id="productTitle" >@selectedGame.Title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="card">
+            <div class="card-img" style="background-image: url('@selectedGame.Image');">
+            </div>
+            <div class="card-body">
+                <p class="card-text">@selectedGame.Description</p>
+                <p class="card-link"><a class=button href="@selectedGame.Url">@selectedGame.Url</a></p>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        @if (voteCount == 0)
+        {
+<span>Be the first to vote!</span> }
+                else
+                {
+<span>@voteCount @voteLabel</span>}
+        @for (int i = 1; i < 6; i++)
+        {
+            var currentStar = i;
+            if (i <= currentRating)
+            {
+<span class="fa fa-star checked" @onclick="(e => SubmitRating(currentStar))"></span> }
+                    else
+                    {
+<span class="fa fa-star" @onclick="(e => SubmitRating(currentStar))"></span>}
+                }
+    </div>
+</div>}
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+@code
+{ Title_List selectedGame;
+            string selectedGameId;
+
+            void SelectGame(string gameId)
+            {
+                selectedGameId = gameId;
+                selectedGame = GameService.GetGames().First(x => x.Id == gameId);
+                GetCurrentRating();
+            }
+
+            int currentRating = 0;
+            int voteCount = 0;
+            string voteLabel;
+
+            void GetCurrentRating()
+            {
+                if (selectedGame?.Ratings == null)
+                {
+                    currentRating = 0;
+                    voteCount = 0;
+                }
+                else
+                {
+                    voteCount = selectedGame.Ratings.Count();
+                    voteLabel = voteCount > 1 ? "Votes" : "Vote";
+                    currentRating = selectedGame.Ratings.Sum() / voteCount;
+                }
+
+                System.Console.WriteLine($"Current rating for {selectedGame?.Id}: {currentRating}");
+            }
+
+            void SubmitRating(int rating)
+            {
+                System.Console.WriteLine($"Rating received for {selectedGame?.Id}: {rating}");
+                if (selectedGameId == null)
+                    return;
+                GameService.AddRating(selectedGameId, rating);
+                SelectGame(selectedGameId);
+            } 
+    }

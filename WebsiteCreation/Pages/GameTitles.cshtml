@@ -1,0 +1,10 @@
+﻿@page
+@using WebsiteCreation.Components
+@model GameTitleModel
+@{
+    ViewData["Title"] = "Game Titles";
+}
+
+@(await Html.RenderComponentAsync<GameList>(RenderMode.ServerPrerendered))
+
+<script src="_framework/blazor.server.js"></script>
